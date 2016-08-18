@@ -178,7 +178,6 @@ def parse_driver():
   git_process = subprocess.Popen("git clone https://github.com/SeattleTestbed/seattlelib_v2", cwd = os.getcwd(), shell = True, 
     stdout = subprocess.PIPE, stderr = subprocess.PIPE)
   out, err = git_process.communicate()
-  print out
   os.chdir("./seattlelib_v2")
   global metadata
   global hashes
@@ -188,12 +187,10 @@ def parse_driver():
   hashes.append( head )
   # start the git commit object traversal
   traverse( head )
-  # print metadata
   # add a commit type to each commit
 
   #for the first commit
 
-  print "running build scripts"
   git_out = subprocess.Popen("git rev-parse HEAD", cwd = os.getcwd(), shell = True, 
     stdout = subprocess.PIPE, stderr = subprocess.PIPE)
   commit, err = git_out.communicate()
@@ -203,7 +200,6 @@ def parse_driver():
   subprocess.call(["python", "initialize.py"]) # i am only usinbg call because for some reason on my vm i get different errors for build scripts
   subprocess.call(["python", "build.py", "-t"])
   os.chdir("../RUNNABLE")
-  print os.path.dirname(os.path.realpath(__file__))
   #popen is used here to pass output of test
   run_out = subprocess.Popen("python utf.py -f ut_seattlelib_tcptime.py", cwd = os.getcwd(), shell = True, 
     stdout = subprocess.PIPE, stderr = subprocess.PIPE)
@@ -215,12 +211,12 @@ def parse_driver():
   unit_test_name = ""
   outcome = ""
   for line in out.splitlines():
-  	if("Running:" in line):
-  		for word in line.split():
-  			if ("ut" in word):
-  				unit_test_name = word
-  			if ("PASS" in word or "FAIL" in word):
-  				outcome = word
+    if("Running:" in line):
+      for word in line.split():
+        if ("ut" in word):
+          unit_test_name = word
+        if ("PASS" in word or "FAIL" in word):
+          outcome = word
 
   print commit[0:7] + "\t" + str(unit_test_name) + "\t" + str(outcome)
 
@@ -245,7 +241,6 @@ def parse_driver():
     subprocess.call(["python", "initialize.py"]) # i am only usinbg call because for some reason on my vm i get different errors for build scripts
     subprocess.call(["python", "build.py", "-t"])
     os.chdir("../RUNNABLE")
-    print os.path.dirname(os.path.realpath(__file__))
     #popen is used here to pass output of test
     run_out = subprocess.Popen("python utf.py -f ut_seattlelib_tcptime.py", cwd = os.getcwd(), shell = True, 
       stdout = subprocess.PIPE, stderr = subprocess.PIPE)
