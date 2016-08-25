@@ -159,6 +159,13 @@ def traverse( commit_hash, child_hash = None ) :
     stdout = subprocess.PIPE, stderr = subprocess.PIPE)
   commit, err = git_out.communicate()
 
+  dirs = os.listdir( os.getcwd() )
+  print "\n\n"
+  # This would print all the files and directories
+  for file in dirs:
+     print file
+
+  print "\n\n"
   os.chdir("./scripts")
   from subprocess import call
   subprocess.call(["python", "initialize.py"]) # i am only usinbg call because for some reason on my vm i get different errors for build scripts
