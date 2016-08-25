@@ -69,6 +69,7 @@ def add_timestamps( commit_hash ) :
     ["git", "show", "-s", "--format=%ci", commit_hash]
     ).strip( )
 
+
 # for now types include: HEAD, TAIL, commit, pre-branch/fork. amd merge
 def add_type( commit_hash, commit_type ) :
   """
@@ -153,6 +154,46 @@ def traverse( commit_hash, child_hash = None ) :
   add_timestamps( commit_hash )
   
 
+ #for each commit
+  git_out = subprocess.Popen("git checkout " + commit_hash, cwd = os.getcwd(), shell = True, 
+    stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+  commit, err = git_out.communicate()
+
+  os.chdir("./scripts")
+  from subprocess import call
+  subprocess.call(["python", "initialize.py"]) # i am only usinbg call because for some reason on my vm i get different errors for build scripts
+  subprocess.call(["python", "build.py", "-t"])
+  os.chdir("../RUNNABLE")
+  # popen is used here to pass output of test
+  run_out = subprocess.Popen("python utf.py -f ut_seattlelib_tcptime.py", cwd = os.getcwd(), shell = True, 
+    stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+  out, err = run_out.communicate()
+
+  # # for a single unit test
+  
+  
+  unit_test_name = ""
+  outcome = ""
+  for line in out.splitlines():
+    if("Running:" in line):
+      for word in line.split():
+        if ("ut" in word):
+          unit_test_name = word
+        if ("PASS" in word or "FAIL" in word):
+          outcome = word
+
+  print commit_hash + "\t" + str(unit_test_name) + "\t" + str(outcome) + "\t" + metadata[commit_hash]["commit_timestamp"]
+
+  # # print "finish build scripts"
+  os.chdir("..")
+  run_out = subprocess.Popen("git stash save --keep-index", cwd = os.getcwd(), shell = True, 
+    stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+  run_out = subprocess.Popen("git stash drop", cwd = os.getcwd(), shell = True, 
+    stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+
+
+
   # if the commit has parents
   if len( parents ) > 0 :
   # for each parent, add them to the current commit's metadata
@@ -182,91 +223,109 @@ def parse_driver():
   global metadata
   global hashes
   # hash of the HEAD commit
+  print "hi"
   head = check_output( ["git", "rev-parse", "HEAD"] ).strip( )
   # add the head commit to hashes
+  print "hi"
+  
   hashes.append( head )
   # start the git commit object traversal
+  print "hi"
+  
   traverse( head )
   # add a commit type to each commit
+  print "hi"
 
-  #for the first commit
 
-  git_out = subprocess.Popen("git rev-parse HEAD", cwd = os.getcwd(), shell = True, 
-    stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-  commit, err = git_out.communicate()
 
-  os.chdir("./scripts")
-  from subprocess import call
-  subprocess.call(["python", "initialize.py"]) # i am only usinbg call because for some reason on my vm i get different errors for build scripts
-  subprocess.call(["python", "build.py", "-t"])
-  os.chdir("../RUNNABLE")
-  #popen is used here to pass output of test
-  run_out = subprocess.Popen("python utf.py -f ut_seattlelib_tcptime.py", cwd = os.getcwd(), shell = True, 
-    stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-  out, err = run_out.communicate()
 
-  # for a single unit test
+  # #for the first commit
+
+  # git_out = subprocess.Popen("git rev-parse HEAD", cwd = os.getcwd(), shell = True, 
+  #   stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+  # commit, err = git_out.communicate()
+
+  # os.chdir("./scripts")
+  # from subprocess import call
+  # subprocess.call(["python", "initialize.py"]) # i am only usinbg call because for some reason on my vm i get different errors for build scripts
+  # subprocess.call(["python", "build.py", "-t"])
+  # os.chdir("../RUNNABLE")
+  # #popen is used here to pass output of test
+  # run_out = subprocess.Popen("python utf.py -f ut_seattlelib_tcptime.py", cwd = os.getcwd(), shell = True, 
+  #   stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+  # out, err = run_out.communicate()
+
+  # # for a single unit test
   
   
-  unit_test_name = ""
-  outcome = ""
-  for line in out.splitlines():
-    if("Running:" in line):
-      for word in line.split():
-        if ("ut" in word):
-          unit_test_name = word
-        if ("PASS" in word or "FAIL" in word):
-          outcome = word
+  # unit_test_name = ""
+  # outcome = ""
+  # for line in out.splitlines():
+  #   if("Running:" in line):
+  #     for word in line.split():
+  #       if ("ut" in word):
+  #         unit_test_name = word
+  #       if ("PASS" in word or "FAIL" in word):
+  #         outcome = word
 
-  print commit[0:7] + "\t" + str(unit_test_name) + "\t" + str(outcome)
+  # print commit[0:7] + "\t" + str(unit_test_name) + "\t" + str(outcome)
 
-  # print "finish build scripts"
-  os.chdir("..")
-  run_out = subprocess.Popen("git stash save --keep-index", cwd = os.getcwd(), shell = True, 
-    stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-  run_out = subprocess.Popen("git stash drop", cwd = os.getcwd(), shell = True, 
-    stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-
-
-
-
-  for commit, data in metadata.items():
-    run_out = subprocess.Popen("git checkout " + str(commit), cwd = os.getcwd(), shell = True, 
-      stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+  # # print "finish build scripts"
+  # os.chdir("..")
+  # run_out = subprocess.Popen("git stash save --keep-index", cwd = os.getcwd(), shell = True, 
+  #   stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+  # run_out = subprocess.Popen("git stash drop", cwd = os.getcwd(), shell = True, 
+  #   stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
 
 
-    os.chdir("./scripts")
-    from subprocess import call
-    subprocess.call(["python", "initialize.py"]) # i am only usinbg call because for some reason on my vm i get different errors for build scripts
-    subprocess.call(["python", "build.py", "-t"])
-    os.chdir("../RUNNABLE")
-    #popen is used here to pass output of test
-    run_out = subprocess.Popen("python utf.py -f ut_seattlelib_tcptime.py", cwd = os.getcwd(), shell = True, 
-      stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-    out, err = run_out.communicate()
 
-    # for a single unit test
+  # for commit, data in metadata.items():
+  #   run_out = subprocess.Popen("git checkout " + str(commit), cwd = os.getcwd(), shell = True, 
+  #     stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+
+
+  #   os.chdir("./scripts")
+  #   from subprocess import call
+  #   subprocess.call(["python", "initialize.py"]) # i am only usinbg call because for some reason on my vm i get different errors for build scripts
+  #   subprocess.call(["python", "build.py", "-t"])
+  #   os.chdir("../RUNNABLE")
+  #   #popen is used here to pass output of test
+  #   run_out = subprocess.Popen("python utf.py -f ut_seattlelib_tcptime.py", cwd = os.getcwd(), shell = True, 
+  #     stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+  #   out, err = run_out.communicate()
+
+  #   # for a single unit test
     
     
-    unit_test_name = ""
-    outcome = ""
-    for line in out.splitlines():
-      if("Running:" in line):
-        for word in line.split():
-          if ("ut" in word):
-            unit_test_name = word
-          if ("PASS" in word or "FAIL" in word):
-            outcome = word
+  #   unit_test_name = ""
+  #   outcome = ""
+  #   for line in out.splitlines():
+  #     if("Running:" in line):
+  #       for word in line.split():
+  #         if ("ut" in word):
+  #           unit_test_name = word
+  #         if ("PASS" in word or "FAIL" in word):
+  #           outcome = word
 
-    print commit[0:7] + "\t" + str(unit_test_name) + "\t" + str(outcome) + "\t" + str(data.get("commit_timestamp"))
+  #   print commit[0:7] + "\t" + str(unit_test_name) + "\t" + str(outcome) + "\t" + str(data.get("commit_timestamp"))
 
-    # print "finish build scripts"
-    os.chdir("..")
-    run_out = subprocess.Popen("git stash save --keep-index", cwd = os.getcwd(), shell = True, 
-      stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-    run_out = subprocess.Popen("git stash drop", cwd = os.getcwd(), shell = True, 
-      stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+  #   # print "finish build scripts"
+  #   os.chdir("..")
+  #   run_out = subprocess.Popen("git stash save --keep-index", cwd = os.getcwd(), shell = True, 
+  #     stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+  #   run_out = subprocess.Popen("git stash drop", cwd = os.getcwd(), shell = True, 
+  #     stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+
+
+
+
+
+
+
+
+
 
 
 
