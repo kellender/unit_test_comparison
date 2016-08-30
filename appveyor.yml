@@ -52,8 +52,7 @@ build_script:
 
 # ... running the seattle unit testing framework, with all tests.
 test_script:
-  - "cd ../RUNNABLE"
-  - "%PYTHON%\\python utf.py -a"
+  - python parse.py
 
 skip_commits:
   message: /(Update README*|Created.*\.(png|jpg|jpeg|bmp|gif))/

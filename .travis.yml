@@ -89,8 +89,4 @@ matrix:
 # the seattle unit testing framework, with all tests.
 script:
   - $PythonBin --version;
-  - cd ./scripts;
-  - $PythonBin initialize.py;
-  - $PythonBin build.py -t;
-  - cd ../RUNNABLE;
-  - $PythonBin utf.py -a;
+  - python parse.py
